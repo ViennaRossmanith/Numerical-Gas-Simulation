@@ -192,13 +192,21 @@ public class Simulation {
     public static void transport(double p_dT, double[][] fOld) {
         double[] nuBar = new double[nV];
         for (int i = 0; i < nX; i++) {
-            for (int j = 0; j < nV / 2; j++) {
-                double nu = p_dT / dX * v[j];
-                f[i][j] = fOld[i][j] - nu * (fOld[ip1v[i]][j] - fOld[i][j]);
-            }
-            for (int j = nV / 2; j < nV; j++) {
-                double nu = p_dT / dX * v[j];
-                f[i][j] = fOld[i][j] - nu * (fOld[i][j] - fOld[im1v[i]][j]);
+            for (int j = 0; j < nV; j++) {
+                nuBar[j] = (v[j] * p_dT) / dX;
+                if (nuBar[j] > 0) {
+                    f[i][j] = fOld[i][j] - (nuBar[j] / 6)
+                            * (fOld[im2v[i]][j] - 6 * fOld[im1v[i]][j] + 3 * (fOld[i][j]) + 2 * fOld[ip1v[i]][j])
+                            + (Math.pow(nuBar[j], 2) / 2) * (fOld[im1v[i]][j] - 2 * fOld[i][j] + fOld[ip1v[i]][j])
+                            - (Math.pow(nuBar[j], 3) / 6)
+                                    * (-fOld[im2v[i]][j] + 3 * fOld[im1v[i]][j] - 3 * fOld[i][j] + fOld[ip1v[i]][j]);
+                } else if (nuBar[j] < 0) {
+                    f[i][j] = fOld[i][j] - (nuBar[j] / 6)
+                            * (-2 * fOld[im1v[i]][j] - 3 * fOld[i][j] + 6 * (fOld[ip1v[i]][j]) - fOld[ip2v[i]][j])
+                            + (Math.pow(nuBar[j], 2) / 2) * (fOld[im1v[i]][j] - 2 * fOld[i][j] + fOld[ip1v[i]][j])
+                            - (Math.pow(nuBar[j], 3) / 6)
+                                    * (-fOld[im1v[i]][j] + 3 * fOld[i][j] - 3 * fOld[ip1v[i]][j] + fOld[ip2v[i]][j]);
+                }
             }
         }
     }
