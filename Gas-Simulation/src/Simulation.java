@@ -212,30 +212,6 @@ public class Simulation {
                     f[i][j] = fOld[shift][j] - nuBar[j] * (fOld[shift][j] - fOld[shiftM1][j]);
                 }
             }
-            /*
-             * double[][] fOld = f;
-             * for (int n = 1; n <= nSteps; n++) {
-             * for (int i = 0; i < nX; i++) {
-             * for (int j = 0; j < nV; j++) {
-             * int shift = i + m[j];
-             * int shiftP1 = shift + 1;
-             * int shiftM1 = shift - 1;
-             * if (shift > nX - 1) {
-             * shift = nX - 1;
-             * }
-             * if (shiftP1 > nX - 1) {
-             * shiftP1 = nX - 1;
-             * }
-             * if (shiftM1 < 0) {
-             * shiftM1 = 0;
-             * }
-             * double nu = dT * v[j] / dX;
-             * f[i][j] = fOld[shift][j] - 0.5 * nu * (fOld[shiftP1][j] - fOld[shiftM1][j])
-             * + 0.5 * nu * nu * (fOld[shiftP1][j] - 2.0 * fOld[shift][j] +
-             * fOld[shiftM1][j]);
-             * }
-             * }
-             */
             computeMoments();
             for (int i = 0; i < nX; i++) {
                 for (int j = 0; j < nV; j++) {

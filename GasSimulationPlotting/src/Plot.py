@@ -6,7 +6,7 @@ matplotlib.rcParams.update({'font.size': 14, 'font.family': 'sans-serif'})
 #matplotlib.rcParams.update({'text.usetex': 'true'})
 
 def makePlot():
-    path = r'C:\Users\OrcaF\OneDrive\Documents\Github\Gas-Simulation'
+    path = r'C:\Users\OrcaF\Documents\Numerical-Gas-Simulation\Gas-Simulation'
     fid = open(path + '\Parameters.txt', 'r')
 
     linestring = fid.readline()
