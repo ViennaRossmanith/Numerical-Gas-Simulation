@@ -190,6 +190,7 @@ public class Simulation {
     }
 
     public static void transport(double p_dT, double[][] fOld) {
+        double[] nuBar = new double[nV];
         for (int i = 0; i < nX; i++) {
             for (int j = 0; j < nV / 2; j++) {
                 double nu = p_dT / dX * v[j];
