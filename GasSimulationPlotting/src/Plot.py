@@ -178,7 +178,7 @@ def makePlot():
     plt.gca().set_xlim([aX, bX])
     plt.gca().set_ylim([aV, bV])
     plt.pcolormesh(x, v, np.transpose(f0), linewidth = 0)
-    plt.title('PDF at Time t=' + ftstr)
+    plt.title('PDF at Time t=0')
     plt.xlabel('x')
     plt.ylabel('v')
     plt.colorbar()

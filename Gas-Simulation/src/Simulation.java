@@ -20,6 +20,10 @@ public class Simulation {
     private static double[] v; // velocity
     private static double[] x; // position
     private static double[][] f; // particle distribution function
+    private static int[] im2v; // spatial indeces
+    private static int[] im1v;
+    private static int[] ip1v;
+    private static int[] ip2v;
 
     public static void main(String[] args) throws Exception {
         nX = 500;
@@ -28,13 +32,31 @@ public class Simulation {
         bX = 1;
         aV = -15;
         bV = 15;
-        knudsen = 0.1;
+        knudsen = 0.001;
         finalTime = 0.32;
         cfl = 1.0;
         dX = (bX - aX) / nX;
         dV = (bV - aV) / nV;
         x = new double[nX];
         v = new double[nV];
+        im2v = new int[nX];
+        im1v = new int[nX];
+        ip1v = new int[nX];
+        ip2v = new int[nX];
+
+        for (int i = 0; i < nX; i++) {
+            im2v[i] = i - 2;
+            im1v[i] = i - 1;
+            ip1v[i] = i + 1;
+            ip2v[i] = i + 2;
+        }
+
+        im2v[0] = 0;
+        im2v[1] = 0;
+        im1v[0] = 0;
+        ip1v[nX - 1] = nX - 1;
+        ip2v[nX - 2] = nX - 1;
+        ip2v[nX - 1] = nX - 1;
 
         for (int i = 0; i < nX; i++) {
             x[i] = aX + (i + 0.5) * dX;
@@ -167,60 +189,76 @@ public class Simulation {
         }
     }
 
+    public static void transport(double p_dT, double[][] fOld) {
+        for (int i = 0; i < nX; i++) {
+            for (int j = 0; j < nV / 2; j++) {
+                double nu = p_dT / dX * v[j];
+                f[i][j] = fOld[i][j] - nu * (fOld[ip1v[i]][j] - fOld[i][j]);
+            }
+            for (int j = nV / 2; j < nV; j++) {
+                double nu = p_dT / dX * v[j];
+                f[i][j] = fOld[i][j] - nu * (fOld[i][j] - fOld[im1v[i]][j]);
+            }
+        }
+    }
+
+    public static void collision(double dT) {
+        for (int i = 0; i < nX; i++) {
+            for (int j = 0; j < nV; j++) {
+                double MM = rho[i] / Math.sqrt(2 * Math.PI * T[i])
+                        * Math.exp(-(Math.pow(v[j] - u[i], 2) / (2 * T[i])));
+                f[i][j] = (knudsen / (knudsen + dT)) * f[i][j] + (dT / (knudsen + dT)) * MM;
+            }
+        }
+    }
+
+    // // transport
+    // for (int i = 0; i < nX; i++) {
+    // for (int j = 0; j < nV / 2; j++) {
+    // int shift = i + m[j];
+    // int shiftP1 = shift + 1;
+    // if (shift > nX - 1) {
+    // shift = nX - 1;
+    // }
+    // if (shiftP1 > nX - 1) {
+    // shiftP1 = nX - 1;
+    // }
+    // f[i][j] = fOld[shift][j] - nuBar[j] * (fOld[shift][j] - fOld[shiftP1][j]);
+    // }
+    // }
+    // // collision
+    // for (int i = 0; i < nX; i++) {
+    // for (int j = nV / 2; j < nV; j++) {
+    // int shift = i - m[j];
+    // int shiftM1 = shift - 1;
+    // if (shift < 0) {
+    // shift = 0;
+    // }
+    // if (shiftM1 < 0) {
+    // shiftM1 = 0;
+    // }
+    // f[i][j] = fOld[shift][j] - nuBar[j] * (fOld[shift][j] - fOld[shiftM1][j]);
+    // }
+    // }
+
     public static void timeAdvance() {
         double vMax = Math.max(Math.abs(aV), Math.abs(bV));
-        // double vMin = v[nV/2];
         double dT = dX * cfl / vMax;
         int nSteps = (int) Math.ceil(finalTime / dT);
         dT = finalTime / nSteps;
-        int[] m = new int[nV];
-        double[] nuBar = new double[nV];
-
-        for (int j = 0; j < nV; j++) {
-            // System.out.println("j:" + j + " nu:" + dT*v[j]/dX);
-            double nu = dT * Math.abs(v[j]) / dX;
-            m[j] = (int) Math.floor(nu);
-            nuBar[j] = nu - m[j];
-            System.out.println(nuBar[j]);
-        }
 
         double[][] fOld = f;
-        for (int n = 1; n <= nSteps; n++) {
-            for (int i = 0; i < nX; i++) {
-                for (int j = 0; j < nV / 2; j++) {
-                    int shift = i + m[j];
-                    int shiftP1 = shift + 1;
-                    if (shift > nX - 1) {
-                        shift = nX - 1;
-                    }
-                    if (shiftP1 > nX - 1) {
-                        shiftP1 = nX - 1;
-                    }
-                    f[i][j] = fOld[shift][j] - nuBar[j] * (fOld[shift][j] - fOld[shiftP1][j]);
-                }
-            }
-            for (int i = 0; i < nX; i++) {
-                for (int j = nV / 2; j < nV; j++) {
-                    int shift = i - m[j];
-                    int shiftM1 = shift - 1;
-                    if (shift < 0) {
-                        shift = 0;
-                    }
-                    if (shiftM1 < 0) {
-                        shiftM1 = 0;
-                    }
-                    f[i][j] = fOld[shift][j] - nuBar[j] * (fOld[shift][j] - fOld[shiftM1][j]);
-                }
-            }
+        transport(dT / 2, fOld);
+        computeMoments();
+        collision(dT);
+        fOld = f;
+        for (int n = 2; n <= nSteps; n++) {
+            transport(dT, fOld);
             computeMoments();
-            for (int i = 0; i < nX; i++) {
-                for (int j = 0; j < nV; j++) {
-                    double MM = rho[i] / Math.sqrt(2 * Math.PI * T[i])
-                            * Math.exp(-(Math.pow(v[j] - u[i], 2) / (2 * T[i])));
-                    f[i][j] = (knudsen / (knudsen + dT)) * f[i][j] + (dT / (knudsen + dT)) * MM;
-                }
-            }
+            collision(dT);
             fOld = f;
         }
+        transport(dT / 2, fOld);
+        computeMoments();
     }
 }
