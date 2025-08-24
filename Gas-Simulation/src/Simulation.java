@@ -27,15 +27,15 @@ public class Simulation {
     private static double[][] fOld;
 
     public static void main(String[] args) throws Exception {
-        nX = 500;
-        nV = 250;
-        aX = -1;
-        bX = 1;
-        aV = -15;
-        bV = 15;
-        knudsen = 0.001;
-        finalTime = 0.32;
-        cfl = 1.0;
+        nX = 256;
+        nV = 128;
+        knudsen = 0.01;
+        finalTime = 0.16;
+        cfl = 1.95;
+        aX = -1.25;
+        bX = 1.25;
+        aV = -7;
+        bV = 7;
         dX = (bX - aX) / nX;
         dV = (bV - aV) / nV;
         x = new double[nX];
@@ -89,15 +89,15 @@ public class Simulation {
         double p_T;
         for (int i = 0; i < nX; i++) {
             for (int j = 0; j < nV; j++) {
-                if (x[i] < 0) {
-                    p_rho = 2.25;
-                    p_u = 0.0;
-                    p_T = 1.125;
+                if (x[i] < 0.5) {
+                    p_rho = 1.000;
+                    p_u = 0.250;
+                    p_T = 1.000;
                     f[i][j] = p_rho / (Math.sqrt(2 * Math.PI * p_T)) * Math.exp(-Math.pow(v[j] - p_u, 2) / (2 * p_T));
                 } else {
-                    p_rho = 3.0 / 7.0;
-                    p_u = 0.0;
-                    p_T = 1.0 / 6.0;
+                    p_rho = 0.125;
+                    p_u = -0.10;
+                    p_T = 0.800;
                     f[i][j] = p_rho / (Math.sqrt(2 * Math.PI * p_T)) * Math.exp(-Math.pow(v[j] - p_u, 2) / (2 * p_T));
                 }
             }
