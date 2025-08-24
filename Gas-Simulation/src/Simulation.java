@@ -24,6 +24,7 @@ public class Simulation {
     private static int[] im1v;
     private static int[] ip1v;
     private static int[] ip2v;
+    private static double[][] fOld;
 
     public static void main(String[] args) throws Exception {
         nX = 500;
@@ -212,43 +213,17 @@ public class Simulation {
     }
 
     public static void collision(double dT) {
+        double[][] MM = new double[nX][nV];
+        double[][] mu = new double[nX][nV];
+        double theta = (dT * (dT + 12 * knudsen)) / ((dT + 3 * knudsen) * (dT + 4 * knudsen));
         for (int i = 0; i < nX; i++) {
             for (int j = 0; j < nV; j++) {
-                double MM = rho[i] / Math.sqrt(2 * Math.PI * T[i])
-                        * Math.exp(-(Math.pow(v[j] - u[i], 2) / (2 * T[i])));
-                f[i][j] = (knudsen / (knudsen + dT)) * f[i][j] + (dT / (knudsen + dT)) * MM;
+                mu[i][j] = (v[j] - u[i]) / Math.sqrt(T[i]);
+                MM[i][j] = (rho[i] / Math.sqrt(2 * Math.PI * T[i])) * Math.exp(-(Math.pow(mu[i][j], 2) / 2));
+                f[i][j] = theta * MM[i][j] + (1 - theta) * fOld[i][j];
             }
         }
     }
-
-    // // transport
-    // for (int i = 0; i < nX; i++) {
-    // for (int j = 0; j < nV / 2; j++) {
-    // int shift = i + m[j];
-    // int shiftP1 = shift + 1;
-    // if (shift > nX - 1) {
-    // shift = nX - 1;
-    // }
-    // if (shiftP1 > nX - 1) {
-    // shiftP1 = nX - 1;
-    // }
-    // f[i][j] = fOld[shift][j] - nuBar[j] * (fOld[shift][j] - fOld[shiftP1][j]);
-    // }
-    // }
-    // // collision
-    // for (int i = 0; i < nX; i++) {
-    // for (int j = nV / 2; j < nV; j++) {
-    // int shift = i - m[j];
-    // int shiftM1 = shift - 1;
-    // if (shift < 0) {
-    // shift = 0;
-    // }
-    // if (shiftM1 < 0) {
-    // shiftM1 = 0;
-    // }
-    // f[i][j] = fOld[shift][j] - nuBar[j] * (fOld[shift][j] - fOld[shiftM1][j]);
-    // }
-    // }
 
     public static void timeAdvance() {
         double vMax = Math.max(Math.abs(aV), Math.abs(bV));
@@ -256,7 +231,7 @@ public class Simulation {
         int nSteps = (int) Math.ceil(finalTime / dT);
         dT = finalTime / nSteps;
 
-        double[][] fOld = f;
+        fOld = f;
         transport(dT / 2, fOld);
         computeMoments();
         collision(dT);
