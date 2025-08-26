@@ -3,7 +3,6 @@ import string as str
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.rcParams.update({'font.size': 14, 'font.family': 'sans-serif'})
-#matplotlib.rcParams.update({'text.usetex': 'true'})
 
 def makePlot():
     path = r'C:\Users\OrcaF\Documents\Numerical-Gas-Simulation\Gas-Simulation'
@@ -219,9 +218,6 @@ def makePlot():
     plt.ylabel('Temperature')
     plt.savefig('T1.pdf', format='pdf', bbox_inches='tight')
 
-    print(x.shape)
-    print(v.shape)
-    print(f1.shape)
     plt.figure(8)
     plt.clf()
     plt.gca().set_aspect('auto')
@@ -233,6 +229,38 @@ def makePlot():
     plt.ylabel('v')
     plt.colorbar()
     plt.savefig('f1.png', format='png', bbox_inches='tight')
+
+    fid = open(path + '\Steps.txt')
+    nSteps = int(fid.readline())
+    fid.close()
+    
+    time = np.zeros(nSteps + 1)
+    mass = np.zeros(nSteps + 1)
+    mom = np.zeros(nSteps + 1)
+    nrg = np.zeros(nSteps + 1)
+    fid = open(path + '\OutputConservation.txt', 'r')
+
+    for i in range(0, nSteps+1):
+        linestring = fid.readline()
+        linelist = linestring.split()
+        time[i] = np.float64(linelist[0])
+        mass[i] = np.float64(linelist[1])
+        mom[i] = np.float64(linelist[2])
+        nrg[i] = np.float64(linelist[3])
+    fid.close()
+
+    plt.figure(9)
+    plt.clf()
+    plt.gca().set_aspect('auto')
+    plt.semilogy(time, np.abs(mass-mass[0]), 'r', linewidth = 2, label = 'total mass')
+    plt.semilogy(time, np.abs(mom-mom[0]), 'b', linewidth = 2, label = 'total mom')
+    plt.semilogy(time, np.abs(nrg-nrg[0]), 'g', linewidth = 2, label = 'total nrg')
+    plt.title('Conservation Plot')
+    plt.grid(True)
+    plt.xlabel('time')
+    plt.ylabel('mass/mom/nrg deviations')
+    plt.legend()
+    plt.savefig('conservation.png', format='png', bbox_inches='tight')
 
 if __name__ == "__main__":
     makePlot()

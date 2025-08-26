@@ -24,7 +24,6 @@ public class Simulation {
     private static int[] im1v;
     private static int[] ip1v;
     private static int[] ip2v;
-    private static double[][] fOld;
 
     public static void main(String[] args) throws Exception {
         nX = 256;
@@ -34,8 +33,8 @@ public class Simulation {
         cfl = 1.95;
         aX = -1.25;
         bX = 1.25;
-        aV = -7;
-        bV = 7;
+        aV = -7.0;
+        bV = 7.0;
         dX = (bX - aX) / nX;
         dV = (bV - aV) / nV;
         x = new double[nX];
@@ -52,12 +51,12 @@ public class Simulation {
             ip2v[i] = i + 2;
         }
 
-        im2v[0] = 0;
-        im2v[1] = 0;
-        im1v[0] = 0;
-        ip1v[nX - 1] = nX - 1;
-        ip2v[nX - 2] = nX - 1;
-        ip2v[nX - 1] = nX - 1;
+        im2v[0] = nX - 2;
+        im2v[1] = nX - 1;
+        im1v[0] = nX - 1;
+        ip1v[nX - 1] = 0;
+        ip2v[nX - 2] = 0;
+        ip2v[nX - 1] = 1;
 
         for (int i = 0; i < nX; i++) {
             x[i] = aX + (i + 0.5) * dX;
@@ -89,7 +88,7 @@ public class Simulation {
         double p_T;
         for (int i = 0; i < nX; i++) {
             for (int j = 0; j < nV; j++) {
-                if (x[i] < 0.5) {
+                if (Math.abs(x[i]) < 0.5) {
                     p_rho = 1.000;
                     p_u = 0.250;
                     p_T = 1.000;
@@ -191,22 +190,25 @@ public class Simulation {
     }
 
     public static void transport(double p_dT, double[][] fOld) {
-        double[] nuBar = new double[nV];
         for (int i = 0; i < nX; i++) {
+            int im2 = im2v[i];
+            int im1 = im1v[i];
+            int ip1 = ip1v[i];
+            int ip2 = ip2v[i];
             for (int j = 0; j < nV; j++) {
-                nuBar[j] = (v[j] * p_dT) / dX;
-                if (nuBar[j] > 0) {
-                    f[i][j] = fOld[i][j] - (nuBar[j] / 6)
-                            * (fOld[im2v[i]][j] - 6 * fOld[im1v[i]][j] + 3 * (fOld[i][j]) + 2 * fOld[ip1v[i]][j])
-                            + (Math.pow(nuBar[j], 2) / 2) * (fOld[im1v[i]][j] - 2 * fOld[i][j] + fOld[ip1v[i]][j])
-                            - (Math.pow(nuBar[j], 3) / 6)
-                                    * (-fOld[im2v[i]][j] + 3 * fOld[im1v[i]][j] - 3 * fOld[i][j] + fOld[ip1v[i]][j]);
-                } else if (nuBar[j] < 0) {
-                    f[i][j] = fOld[i][j] - (nuBar[j] / 6)
-                            * (-2 * fOld[im1v[i]][j] - 3 * fOld[i][j] + 6 * (fOld[ip1v[i]][j]) - fOld[ip2v[i]][j])
-                            + (Math.pow(nuBar[j], 2) / 2) * (fOld[im1v[i]][j] - 2 * fOld[i][j] + fOld[ip1v[i]][j])
-                            - (Math.pow(nuBar[j], 3) / 6)
-                                    * (-fOld[im1v[i]][j] + 3 * fOld[i][j] - 3 * fOld[ip1v[i]][j] + fOld[ip2v[i]][j]);
+                double nuBar = (v[j] * p_dT) / dX;
+                if (nuBar > 0) {
+                    f[i][j] = fOld[i][j] - (nuBar / 6)
+                            * (fOld[im2][j] - 6 * fOld[im1][j] + 3 * fOld[i][j] + 2 * fOld[ip1][j])
+                            + (Math.pow(nuBar, 2) / 2) * (fOld[im1][j] - 2 * fOld[i][j] + fOld[ip1][j])
+                            - (Math.pow(nuBar, 3) / 6)
+                                    * (-fOld[im2][j] + 3 * fOld[im1][j] - 3 * fOld[i][j] + fOld[ip1][j]);
+                } else if (nuBar < 0) {
+                    f[i][j] = fOld[i][j] - (nuBar / 6)
+                            * (-2 * fOld[im1][j] - 3 * fOld[i][j] + 6 * fOld[ip1][j] - fOld[ip2][j])
+                            + (Math.pow(nuBar, 2) / 2) * (fOld[im1][j] - 2 * fOld[i][j] + fOld[ip1][j])
+                            - (Math.pow(nuBar, 3) / 6)
+                                    * (-fOld[im1][j] + 3 * fOld[i][j] - 3 * fOld[ip1][j] + fOld[ip2][j]);
                 }
             }
         }
@@ -220,29 +222,80 @@ public class Simulation {
             for (int j = 0; j < nV; j++) {
                 mu[i][j] = (v[j] - u[i]) / Math.sqrt(T[i]);
                 MM[i][j] = (rho[i] / Math.sqrt(2 * Math.PI * T[i])) * Math.exp(-(Math.pow(mu[i][j], 2) / 2));
-                f[i][j] = theta * MM[i][j] + (1 - theta) * fOld[i][j];
+                f[i][j] = theta * MM[i][j] + (1 - theta) * f[i][j];
             }
         }
     }
 
-    public static void timeAdvance() {
+    public static void conservation(double[] totals) {
+        totals[0] = 0;
+        totals[1] = 0;
+        totals[2] = 0;
+        for (int i = 0; i < nX; i++) {
+            for (int j = 0; j < nV; j++) {
+                totals[0] += dX * dV * f[i][j];
+                totals[1] += dX * dV * v[j] * f[i][j];
+                totals[2] += dX * dV * Math.pow(v[j], 2) * f[i][j];
+            }
+        }
+    }
+
+    public static void outputConservation(double[] time, double[] mass, double[] momentum, double[] energy, int length)
+            throws IOException {
+        String fileName = "OutputConservation.txt";
+
+        FileWriter outputConservation = new FileWriter(fileName);
+
+        for (int i = 0; i < length; i++) {
+            outputConservation.write(
+                    String.format("%.15e    %.15e    %.15e    %.15e%n",
+                            time[i], mass[i], momentum[i], energy[i]));
+        }
+
+        outputConservation.close();
+    }
+
+    public static void timeAdvance() throws IOException {
+        double[][] fOld = new double[nX][nV];
         double vMax = Math.max(Math.abs(aV), Math.abs(bV));
         double dT = dX * cfl / vMax;
         int nSteps = (int) Math.ceil(finalTime / dT);
         dT = finalTime / nSteps;
+        cfl = vMax * dT / dX;
+        double[] time = new double[nSteps + 1];
+        double[] mass = new double[nSteps + 1];
+        double[] mom = new double[nSteps + 1];
+        double[] nrg = new double[nSteps + 1];
+        double[] totals = new double[3];
+        time[0] = 0;
+        conservation(totals);
+        mass[0] = totals[0];
+        mom[0] = totals[1];
+        nrg[0] = totals[2];
 
-        fOld = f;
-        transport(dT / 2, fOld);
-        computeMoments();
-        collision(dT);
-        fOld = f;
-        for (int n = 2; n <= nSteps; n++) {
+        for (int n = 1; n <= nSteps; n++) {
+            computeMoments();
+            collision(dT / 2);
+            for (int i = 0; i < nX; i++) {
+                for (int j = 0; j < nV; j++) {
+                    fOld[i][j] = f[i][j];
+                }
+            }
             transport(dT, fOld);
             computeMoments();
-            collision(dT);
-            fOld = f;
+            collision(dT / 2);
+            time[n] = n * dT;
+            conservation(totals);
+            mass[n] = totals[0];
+            mom[n] = totals[1];
+            nrg[n] = totals[2];
         }
-        transport(dT / 2, fOld);
-        computeMoments();
+
+        String fileName = "Steps.txt";
+        FileWriter nStepsWriter = new FileWriter(fileName);
+        nStepsWriter.write(String.valueOf(nSteps));
+        nStepsWriter.close();
+
+        outputConservation(time, mass, mom, nrg, nSteps + 1);
     }
 }
