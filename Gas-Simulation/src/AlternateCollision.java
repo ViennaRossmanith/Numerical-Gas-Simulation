@@ -216,12 +216,32 @@ public class AlternateCollision {
 
     public static void collision(double dT) {
         double[][] MM = new double[nX][nV];
-        double[][] mu = new double[nX][nV];
+        double mu;
         double theta = (dT * (dT + 12 * knudsen)) / ((dT + 3 * knudsen) * (dT + 4 * knudsen));
+
         for (int i = 0; i < nX; i++) {
+            double factor = (dV / Math.sqrt(2 * Math.PI * T[i]));
+            double A0 = 0;
+            double A1 = 0;
+            double A2 = 0;
+            double A3 = 0;
+            double A4 = 0;
             for (int j = 0; j < nV; j++) {
-                mu[i][j] = (v[j] - u[i]) / Math.sqrt(T[i]);
-                MM[i][j] = (rho[i] / Math.sqrt(2 * Math.PI * T[i])) * Math.exp(-(Math.pow(mu[i][j], 2) / 2));
+                mu = (v[j] - u[i]) / Math.sqrt(T[i]);
+                A0 += Math.pow(mu, 0) * Math.exp(-0.5 * (Math.pow(mu, 2)));
+                A1 += Math.pow(mu, 1) * Math.exp(-0.5 * (Math.pow(mu, 2)));
+                A2 += Math.pow(mu, 2) * Math.exp(-0.5 * (Math.pow(mu, 2)));
+                A3 += Math.pow(mu, 3) * Math.exp(-0.5 * (Math.pow(mu, 2)));
+                A4 += Math.pow(mu, 4) * Math.exp(-0.5 * (Math.pow(mu, 2)));
+            }
+            A0 *= factor;
+            A1 *= factor;
+            A2 *= factor;
+            A3 *= factor;
+            A4 *= factor;
+            for (int j = 0; j < nV; j++) {
+                mu = (v[j] - u[i]) / Math.sqrt(T[i]);
+                MM[i][j] = (rho[i] / Math.sqrt(2 * Math.PI * T[i])) * Math.exp(-(Math.pow(mu, 2) / 2));
                 f[i][j] = theta * MM[i][j] + (1 - theta) * f[i][j];
             }
         }
