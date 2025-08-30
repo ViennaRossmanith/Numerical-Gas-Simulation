@@ -248,7 +248,7 @@ public class AlternateCollision {
             for (int j = 0; j < nV; j++) {
                 mu = (v[j] - u[i]) / Math.sqrt(T[i]);
                 MM[i][j] = (rho[i] / Math.sqrt(2 * Math.PI * T[i])) * Math.exp(-(Math.pow(mu, 2) / 2))
-                        * (a[1] + a[2] * mu + a[3] * (Math.pow(mu, 2) - 1));
+                        * (a[0] + a[1] * mu + a[2] * (Math.pow(mu, 2) - 1));
                 f[i][j] = theta * MM[i][j] + (1 - theta) * f[i][j];
             }
         }
