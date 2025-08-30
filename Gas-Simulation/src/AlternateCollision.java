@@ -239,6 +239,12 @@ public class AlternateCollision {
             A2 *= factor;
             A3 *= factor;
             A4 *= factor;
+            double d = Math.pow(A2, 3) - 2 * A1 * A2 * A3 + A0 * Math.pow(A3, 2) + Math.pow(A1, 2) * A4 - A0 * A2 * A4;
+            double[] a = new double[3];
+            a[0] = (1 / d) * (Math.pow(A1, 2) + A2 * (2 * A2 - A0 - A4) - A3 * (2 * A1 - A3));
+            a[1] = (1 / d) * (A1 * (A4 - A2) + A3 * (A0 - A2));
+            a[2] = (1 / d) * (A1 * (A1 - A3) + A2 * (A2 - A0));
+
             for (int j = 0; j < nV; j++) {
                 mu = (v[j] - u[i]) / Math.sqrt(T[i]);
                 MM[i][j] = (rho[i] / Math.sqrt(2 * Math.PI * T[i])) * Math.exp(-(Math.pow(mu, 2) / 2));
