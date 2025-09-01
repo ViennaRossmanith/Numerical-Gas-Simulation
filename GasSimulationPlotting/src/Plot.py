@@ -2,7 +2,9 @@ import numpy as np
 import string as str
 import matplotlib
 import matplotlib.pyplot as plt
-matplotlib.rcParams.update({'font.size': 14, 'font.family': 'sans-serif'})
+matplotlib.rcParams.update({'font.size': 16, 'font.family': 'sans-serif'})
+#matplotlib.rcParams.update({'text.usetex':'true'})
+
 
 def makePlot():
     path = r'C:\Users\OrcaF\Documents\Numerical-Gas-Simulation\Gas-Simulation'
